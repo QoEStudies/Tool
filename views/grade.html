@@ -1,0 +1,121 @@
+{% extends "base.html" %} {% block main %}
+<div class="col-md-6 col-md-offset-3" style="text-align:center">
+ <h2> <b>Please decide which answer best describes the quality of last video. </b> </h2>
+
+    <h3>Progress: {{count}} / {{num_vids}}</h3>
+</div>
+
+<div class="col-md-6 col-md-offset-3">
+    <form name="myform" action= "next" method="POST" style="text-align:center">
+        <div class="btn-group-vertical" data-toggle="buttons" id="Inputs">
+            <label class="btn btn-default"><input id="StronglyPositive" name="sentiment" required="" type="radio" value="5" /><h4>Excellent (Imperceptible Quality Damage)</h4>
+            </label>
+            <label class="btn btn-default"><input id="Positive" name="sentiment" required="" type="radio" value="4" /><h4>Good (Perceptible But Not Annoying Quality Damage)</h4>
+            </label>
+            <label class="btn btn-default"><input id="Neutral" name="sentiment" required="" type="radio" value="3" /><h4>Fair (Slightly Annoying Quality Damage)</h4>
+            </label>
+            <label class="btn btn-default"> <input id="Negative" name="sentiment" required="" type="radio" value="2" /><h4>Poor (Annoying Quality Damage)</h4>
+            </label>
+            <label class="btn btn-default"> <input id="StronglyNegative" name="sentiment" required="" type="radio" value="1" /><h4>Bad (Very Annoying Quality Damage)</h4>
+            </label>
+        </div>
+
+        <h2> <b>Next two questions serve as attention checks. </b> Select the answer that aligns with your observation of last video (If last video is the BEST quality reference, you must answer <b>"No"</b> to both questions.) </h2>
+        <h3> Did you notice extra resolution decrease when compared with excellent grade reference? </h3>
+        <div class="btn-group-vertical" data-toggle="buttons" id="Inputs2">
+           <label class="btn btn-default"><input id="yes" name="blur" required=""   type="radio" value="1" /><h4>Yes</h4>
+            </label>
+            <label class="btn btn-default"><input id="no" name="blur" required=""  type="radio" value="0" /><h4>No</h4>
+            </label>
+        </div>
+
+
+        <h3> Did you notice extra video pause of more than 1 second when compared with excellent grade reference?  </h3>
+        <div class="btn-group-vertical" data-toggle="buttons" id="Inputs3">
+           <label class="btn btn-default"><input id="yes" name="stall" required=""   type="radio" value="4" /><h4>Yes</h4>
+            </label>
+            <label class="btn btn-default"><input id="no" name="stall" required=""  type="radio" value="2" /><h4>No</h4>
+            </label>
+        </div>
+
+        </br></br>
+        <button type="submit" class="btn btn-primary" style="text-align:center; font-size:20px" onclick="return checkform()" >Watch next video</button>
+    </form>
+</div>
+
+<div class="col-md-6 col-md-offset-3">
+    <form action="back2video", method="POST", style="text-align:center">
+    </br>
+        <button type="submit" class="btn btn-primary">Watch again</button>
+    </form>
+</div>
+</br>
+<!-- Open internal javascript -->
+<script>
+        $(document).ready(function() {
+            // highlight selected category
+            var inputs = $("#Inputs input:radio");
+            inputs.change(function(){
+              inputs.parent().removeClass("btn-success");
+              inputs.parent().addClass("btn-default");
+              if($(this).is(":checked")){
+                $(this).parent().removeClass("btn-default");
+                $(this).parent().addClass("btn-success");
+              }else{
+                $(this).parent().removeClass("btn-success");
+                $(this).parent().addClass("btn-default");
+              }
+            });
+            // end highlight
+          });
+         $(document).ready(function() {
+            // highlight selected category
+            var inputs = $("#Inputs2 input:radio");
+            inputs.change(function(){
+              inputs.parent().removeClass("btn-success");
+              inputs.parent().addClass("btn-default");
+              if($(this).is(":checked")){
+                $(this).parent().removeClass("btn-default");
+                $(this).parent().addClass("btn-success");
+              }else{
+                $(this).parent().removeClass("btn-success");
+                $(this).parent().addClass("btn-default");
+              }
+            });
+            // end highlight
+          });
+        $(document).ready(function() {
+            // highlight selected category
+            var inputs = $("#Inputs3 input:radio");
+            inputs.change(function(){
+              inputs.parent().removeClass("btn-success");
+              inputs.parent().addClass("btn-default");
+              if($(this).is(":checked")){
+                $(this).parent().removeClass("btn-default");
+                $(this).parent().addClass("btn-success");
+              }else{
+                $(this).parent().removeClass("btn-success");
+                $(this).parent().addClass("btn-default");
+              }
+            });
+            // end highlight
+          });
+
+    function checkform(){
+        var flag = true;
+        //alert($('[name=device]').val());
+        if(Number(document.forms["myform"]["sentiment"].value) != 5 && '{{count}}' == 1 ) {
+            flag = false;
+            alert("Please select Excellent.")
+        }
+        else if (Number(document.forms["myform"]["sentiment"].value) != 1 && '{{count}}' == 2 ) {
+            flag = false;
+            alert("Please select Bad.")
+        }
+
+        return flag;
+    }
+</script>
+<!-- Close internal javascript-->
+
+{% endblock %}
