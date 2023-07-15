@@ -1,0 +1,118 @@
+{% extends "base.html" %} {% block main %}
+<div class="container">
+    <div class="row",style="margin-bottom: 30px">
+        
+    <div class="col-md-6 col-md-offset-3", style="text-align: justify;">
+            <h2>Instructions</h2>
+                <p>
+                This survey studies how <b>video quality damages </b> occuring at different times affect your video-watching experience differently. The list of videos you will be asked to watch and grade are created from a same original video by inserting quality damages at different times. This survey is divided to two sections:
+
+                </p>
+                <ul> <li>  First part is a short training, where you will learn how to recognize video damage and how to grade them. </li>
+
+                        <ol>
+                              <li> You will first watch two short example videos. These examples show you two types of quality damage you might see in this study: resolution decrease, and video pause. </li>
+                              <li> We use a 5-level grading: Excellent, Good, Fair, Poor, or Bad. After watching the short videos, you will then watch another two reference videos. The first is an example of "Excellent" grade (no perceptible damage). The second is an example of "Bad" grade (annoying damage). </li>
+
+                        </ol> 
+                              
+<li> Second part is where you will grade the test videos. </li>
+                        <ol>
+                             <li> You should grade the quality of each test video <b>by comparing to</b> the two reference videos you have watched.  </li>  
+                        </ol> 
+                   </ul>           
+
+                      <p> Please be sure to watch each video in its <b>full length </b> and answer every question in this survey honestly. </p>
+            </div>
+
+    <div class="col-md-6 col-md-offset-3", style="text-align: justify;">
+
+        <form action="start", method="POST">
+            
+
+            <div class="form-group">
+                <label for="instruction">Have you read the instructions? You might not be paid if the conditions are not met.</label>
+                <select name="instruction" class="form-control" id="instruction">
+                    <option value="_null" disabled selected></option> 
+                    <option >Yes, I confirm. </option>
+                </select>
+            </div>
+
+
+            <h2>Please take the simple survey before the test.</h2>
+
+            <div class="form group">
+                <label>Your MTurk Worker ID:(you can find this on your Dashboard or in the upper left corner of the
+                    <a href="https://worker.mturk.com" target="_blank">new Worker website</a>)</label>
+                <input name="MTurkID" type="text" class="form-control" id="MTurkID" placeholder="Enter MTurkID">
+            </div>
+
+            <div class="form-group">
+                <label for="device">Device you use most for video streaming:</label>
+                <select name="device" class="form-control" id="device">
+                    <option value="_null" disabled selected></option> 
+                    <option>Desktop</option>
+                    <option>Laptop</option>
+                    <option>Tablet</option>
+                    <option>Smart phone</option>
+                    <option>Other device</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Your age group:</label>
+                <select name="age" class="form-control" id="age">
+                    <option value="_null" disabled selected></option> 
+                    <option>18 - 24</option>
+                    <option>25 - 31</option>
+                    <option>32 - 38</option>
+                    <option>39 - 45</option>
+                    <option>46 - 52</option>
+                    <option>53 - 59</option>
+                    <option>60 and above</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="network">Network you use most for video streaming:</label>
+                <select name="network" class="form-control" id="network">
+                    <option value="_null" disabled selected></option> 
+                    <option >WiFi</option>
+                    <option>Cable network</option>
+                    <option>Cellular network</option>
+                    <option>Other</option>
+                </select>
+            </div>
+
+
+
+
+            <button type="submit" class="btn btn-primary" onclick="return checkform()">Next</button>
+        </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function checkform(){
+        var flag = true;
+        //alert($('[name=device]').val());
+        if($('[name=MTurkID]').val() == "") {
+            flag = false;
+            alert("Please input your MTurk worker ID.");
+        }
+        else if($('[name=device]').val() == null ||
+                $('[name=age]').val() == null ||
+                $('[name=network]').val() == null || 
+                $('[name=instruction]').val() == null ) {
+            flag = false;
+            alert("Please complete the form.")
+        }
+        return flag;
+    }
+</script>
+
+
+{% endblock %}
+

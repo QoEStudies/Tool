@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!-- saved from url=(0043)http://ivc.uwaterloo.ca/research/RDOS/demo/ -->
+<html>
+<style type="text/css">
+    
+
+.dash-video-player {
+    /* background-color: #000000; */
+    position: relative;
+    padding: 0;
+    max-width: 960px;
+}
+
+.dash-video-player video {
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    object-fit: fill;
+}
+
+
+
+</style>
+
+<head>    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+   <link rel="stylesheet" href="/static/css/bootstrap2.min.css">
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+       <script src="/static/js/bootstrap.js"></script>
+    
+    <title>{{ title }}</title>
+</head>
+
+<body>
+
+        <div class="col">            
+            <div class="row">
+                <div class="col" >
+                     <div class="dash-video-player">
+                        <video id="l_video" preload="metadata" width="1024" height="576"  controls="controls"></video>
+                    <div  style="text-align:center"> 
+                        <h2>Excellent Grade Reference</h2> 
+                    </div>
+                    </div>
+                </div></br></br>
+
+                <div class="col" >
+                    <div class="dash-video-player">
+                        <video id="r_video" preload="metadata" width="1024" height="576"  controls="controls" ></video>
+                        <div  style="text-align:center"> 
+                        <h2>Bad Grade Reference</h2> 
+                    </div>
+                    </div>
+                </div>
+            </div> 
+        </br></br>
+
+        </div>
+
+  <div id="form_container">
+      <form action="back2video" method="POST" style="text-align:center" id="next_page">
+          <button type="submit" class="btn btn-primary" >Go Back to Test videos</button>
+      </form>
+  </div>
+
+
+</body>
+
+<script>
+  function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+
+    // Check if the XMLHttpRequest object has a "withCredentials" property.
+    // "withCredentials" only exists on XMLHTTPRequest2 objects.
+    xhr.open(method, url, true);
+  } else if (typeof XDomainRequest != "undefined") {
+    
+    // Otherwise, check if XDomainRequest.
+    // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+
+  } else {
+
+    // Otherwise, CORS is not supported by the browser.
+    xhr = null;a
+
+  }
+  return xhr;
+}
+
+
+var req =  createCORSRequest('GET','{{worst_quality}}');
+req.responseType = 'blob';
+
+
+
+req.onload = function() {
+   // Onload is triggered even on 404
+   // so we need to check the status code
+   if (this.status === 200) {
+      var videoBlob = this.response;
+      var vid = URL.createObjectURL(videoBlob); // IE10+
+      // Video is now downloaded
+      // and we can set it as source on the video element
+      document.getElementById('r_video').src = vid;
+   }
+}
+
+
+req.send();
+
+
+var req =  createCORSRequest('GET','{{best_quality}}');
+req.responseType = 'blob';
+
+req.onload = function() {
+   // Onload is triggered even on 404
+   // so we need to check the status code
+   if (this.status === 200) {
+      var videoBlob = this.response;
+      var vid = URL.createObjectURL(videoBlob); // IE10+
+      // Video is now downloaded
+      // and we can set it as source on the video element
+      document.getElementById('l_video').src = vid;
+      alert('video loaded');
+   }
+}
+
+
+req.send();
+
+</script>
+
+</html>
+
+
+

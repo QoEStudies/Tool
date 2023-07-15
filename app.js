@@ -1,0 +1,85 @@
+
+const Koa = require('koa');
+
+const bodyParser = require('koa-bodyparser');
+
+const controller = require('./controller');
+
+const fs = require('fs');
+
+const rimraf = require("rimraf");
+
+const app = new Koa();
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+var prompt = require('prompt-sync')();
+
+var dummy = true;
+
+
+//Initialize results
+
+
+// log request URL:
+app.use(async (ctx, next) => {
+    console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
+    var
+const templating = require('./templating');
+
+        start = new Date().getTime(),
+        execTime;
+    await next();
+    execTime = new Date().getTime() - start;
+    ctx.response.set('X-Response-Time', `${execTime}ms`);
+});
+
+// parse user from cookie:
+app.use(async (ctx, next) => {
+    ctx.state.user = parseUser(ctx.cookies.get('name') || '');
+    await next();
+});
+
+// static file support:
+if (! isProduction) {
+    let staticFiles = require('./static-files');
+    app.use(staticFiles('/static/', __dirname + '/static'));
+}
+
+// parse request body:
+app.use(bodyParser());
+
+// add nunjucks as view:
+app.use(templating('views', {
+    noCache: !isProduction,
+    watch: !isProduction
+}));
+
+// add controller:
+app.use(controller());
+
+app.listen(Number(process.argv[2]) || 3001);
+console.log('app started at port' + String(Number(process.argv[2]) || 3001));
+
+function parseUser(obj) {
+    if (!obj) {
+        return;
+    }
+    //console.log('try parse: ' + obj);
+    let s = '';
+    if (typeof obj === 'string') {
+        s = obj;
+    } else if (obj.headers) {
+        let cookies = new Cookies(obj, null);
+        s = cookies.get('name');
+    }
+    if (s) {
+        try {
+            let user = JSON.parse(Buffer.from(s, 'base64').toString());
+            //console.log(`User: ${user.mturkID}, ID: ${user.video_order}`);
+            return user;
+        } catch (e) {
+            // ignore
+        }
+    }
+}
