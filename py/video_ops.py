@@ -78,6 +78,13 @@ def freeze_frame(input_file, output_file, freeze_time, duration):
     # Write the final video to the output path
     final_clip.write_videofile(output_file)
 
+    clip.close()
+    final_clip.close()
+    clip_before.close()
+    clip_freeze.close()
+    clip_after.close()
+    freeze_effect.close()
+
 
 def change_playback_rate(input_file, output_file, start_time, end_time, new_speed):
     # Load the video clip
@@ -94,6 +101,11 @@ def change_playback_rate(input_file, output_file, start_time, end_time, new_spee
 
     # Write the final video to the output path
     final_clip.write_videofile(output_file)
+    clip.close()
+    final_clip.close()
+    clip_before.close()
+    clip_slowmotion.close()
+    clip_after.close()
 
 
 def drop_frames(input_file, output_file, start_time, end_time, drop_percentage):
@@ -124,6 +136,13 @@ def drop_frames(input_file, output_file, start_time, end_time, drop_percentage):
 
     # Write the final video to the output path
     final_clip.write_videofile(output_file)
+    clip.close()
+    final_clip.close()
+    selected_clip.close()
+    clip_before.close()
+    clip_after.close()
+    clip_drop.close()
+
 
 
 # drop_frames('input.mp4', 'output.mp4', 2, 7, 0.8)

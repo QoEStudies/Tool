@@ -1,14 +1,49 @@
-async function get_next_video(user_feedback) {
+const request = require("sync-request");
 
-    const node_calls_python = require("node-calls-python");
-    const py = node_calls_python.interpreter;
+function get_next_video(worker_id) {
 
-    const pymodule_get_next_video = py.importSync("./py/get_next_video.py");
-    var next_video = py.callSync(pymodule_get_next_video, "get_next_video", user_feedback);
+    var url = "http://127.0.0.1:5000/get_next_video";
+    var data = {'worker_id': worker_id};
 
-    console.log("next video is " + next_video);
 
-    return next_video;
+    const request = require('sync-request');
+
+    try {
+        const res = request('POST', url, {
+            json: data
+        });
+        const response = JSON.parse(res.getBody('utf8'));
+        const video_path = response.next_filename;
+        const parts = video_path.split('/');
+        return parts[parts.length - 1];
+    } catch (error) {
+        console.error('Error sending POST request:', error);
+        return "None";
+    }
+
+
+
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url, false);  // Make the request synchronous
+
+    // Set the content type header if sending JSON data
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    // Send the request
+    xhr.send(JSON.stringify(data));
+
+    if (xhr.status === 200) {
+        // Request successful
+        const response = JSON.parse(xhr.responseText);
+        const video_path = response.next_filename;
+        const parts = video_path.split('/');
+        return parts[parts.length - 1];
+    } else {
+        // Request failed
+        console.error('Error:', xhr.status);
+        return 'None';
+    }
 }
 
 module.exports = get_next_video;

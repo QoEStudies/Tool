@@ -3,15 +3,15 @@
 
 ## Description
 
-These are source codes for 1video experiment.
+It is a tool for setting up user studies for video QoE studies.
+Different from the traditional tools which need you to specify the videos and the number of ratings for the videos to collect before the user study,
+this tool can dynamically generate videos to rate during the user study task.
 
-## Setup
+## Environmental setup
 
 1. Install `node.js` from its [official website](https://nodejs.org/en/download/)
 
    if you are using Windows, make sure to click 'add to path' when installing.
-
-   if you want to run on the uchicago linux machine, follow their [guide to installing via binary archive](https://github.com/nodejs/help/wiki/Installation)
 
    To test if the installation is successful, you can input 
 
@@ -24,7 +24,7 @@ These are source codes for 1video experiment.
 2. Download the zip file and unzip  it. Locate to the folder:
 
    ```shell
-   cd QoEProject
+   cd Tool
    ```
 
 3. (Optional) Install all the dependencies:
@@ -33,29 +33,107 @@ These are source codes for 1video experiment.
 
    ```shell
    npm install
+   pip install Flask, request, jsonify, moviepy
+   ```
+   
+   Install FFMPEG
+   ```shell
+   #Cent OS 
+   sudo yum install ffmpeg ffmpeg-devel
+   
+   #MacOS
+   brew install ffmpeg
+   
+   #Windows: Download from https://ffmpeg.org/download.html
    ```
 
 4. Start the server on localhost:
 
    ```shell
-   node app.js
+   node app.js & python ./py/app.py
    ```
 
    ```shell
-   nohup node app.js 1>/dev/null 2>&1 &
+   node app.js & python ./py/app.py 1>/dev/null 2>&1 &
    ```
 
    If you run into any errors regarding modules not found, try removing the "node_modules" folder and go back to step 3.
 
 5. Visit `localhost:3001` on your website, you should see the instruction page.
 
-   If you are running on the uchicago linux machine, visit `linux.cs.uchicago.edu:3001`
-
-   (Optional) If you want to change the port number, in the `app.js` file, edit line 48 to the desired port number.
-
    After finishing the test, the results will be stored in `./results/`, the file name will be the MTurk ID.
 
-## Running MTurk Survey
+## Customize your user study
+
+### Customize your video quality
+
+This tool supports to customize video quality from a source (or raw) video. We support four types of operations.
+
+| Operation                                               | Meaning                                                                |
+|---------------------------------------------------------|------------------------------------------------------------------------|
+| change_bitrate(start_time, end_time, new_bitrate)       | Change the original bitrate to new_bitrate from start_time to end_time |      
+| freeze_frame(freeze_point, freeze_duration)             | Freeze the frame at freeze_point for a time period of freeze_duration  | 
+| change_playback_rate(start_time, end_time, new_playback) | Set the playback rate to new_playback from start_time to end_time      |  
+ | drop_frames(start_time, end_time, drop_rate)            | Drop drop_rate frames from start_time to end_time                      | 
+
+In this tool, a video's quality is presented as the following format:
+```python3
+"""
+Format of video quality presentation: Tuple[str, List[Operation]]
+"""
+# Example: for source video source.mp4, we first set the bitrate to 200Kbps from 1 to 5 seconds,
+# and then add a 2-second buffering stall at the 5-th second.
+perceived_video_quality = ('source.mp4',  [('change_bitrate', 1, 5, 200), ('freee_frame', 5, 2)])
+```
+
+### Set up your source video
+
+Please put all your source videos under `static/videos/raw_videos` 
+
+### Set an initial set of application demos to rate
+
+The initial set of videos for ratings is defined `get_initial_videos` in `py/user_defined_module/initialize videos`.
+Please write your own logic.
+
+The output format is
+```python
+(List[PerceivedVideoQuality], List[int]])
+```
+The first element of the output tuple is a list of perceived video quality (already defined above), and the second element
+is a list of number of ratings needed for the corresponding perceived video quality. For example, in the following output tuple
+```python
+([('1.mp4', []), ('1.mp4', [('freeze_frame', 5, 1)])], [10, 20])
+```
+, we two videos to rate, i.e., `('1.mp4', [])` and `('1.mp4', [('freeze_frame', 5, 1)])` respectively. We need 10 ratings for the first video, and 20 for the second.
+
+
+### Dynamically update worker assignment
+We can dynamically determine next videos that need to be rated based on the collected QoE ratings. 
+The logic is defined in `update_next_videos` in `py/user_defined_module/initialize videos`.
+The input format is a tuple as
+```python
+(List[PerceivedVideoQuality], List[List[int]])
+```
+The first element is a list of perceived videos, and the second element is a list of the ratings for each video.
+Each video has a list of ratings that we already collected.
+For example,
+```python
+([('1.mp4', []), ('1.mp4', [('freeze_frame', 5, 1)])], [[1, 1], [2, 3]])
+```
+, we have two videos, `('1.mp4', [])` and `('1.mp4', [('freeze_frame', 5, 1)])`, and we have collected two ratings `[1, 1]` for the first video, `[2, 3]` for the second.
+
+The output format is the same as `get_initial_videos` as
+```python
+(List[PerceivedVideoQuality], List[int]])
+```
+But the meaning is a little bit different.
+It means how many **MORE** ratings we need for the videos. For example, if the output is
+```python
+([('1.mp4', []), ('1.mp4', [('freeze_frame', 5, 1)])], [2, 6])
+```
+, it means we need 2 more ratings for the first video, and 6 more for the second, based on the QoE ratings we already collected.
+
+## Running on Amazon MTurk
 
 1. Login to [Amazon Requester](https://requester.mturk.com/begin_signin) using your Amazon account.
 
@@ -72,54 +150,3 @@ These are source codes for 1video experiment.
 
 5. Finish and publish a batch.
 
-## Problems(solved)
-
-1. Only one tester can proceed the test at the same time. This is because I used some variables to control the order of the webpages, videos, etc.
-   If another tester visits the webpage, he will be asked to wait first. One big problem is that if one tester quits before finishing, then the server will keep waiting.
-   I wonder if this problem can be solved by multi-process methods(each tester has a pid).
-
-    An idea just came across my mind: can I use `ctx` to transfer these global variables? eg.
-    ```
-    ctx.video_order = video_order;
-    ctx.count = count;
-    ctx.result = result;
-    ```
-    This problem is fixed: the idea is using cookie, bind all the global variables to the cookie by using:
-    ```
-    ctx.cookies.set('name');
-    ctx.cookies.get('name');
-    ```
-    Also need to add
-    ```
-    app.use(async (ctx, next) => {
-    ctx.state.user = parseUser(ctx.cookies.get('name') || '');
-    await next();
-    });
-    ```
-    in `app.js` . 
-
-2. When running npm install, the installation of package Node-calls-python may sometimes fail. 
-   This is caused by unrecognized python environment. One can first try deactivating conda environment by
-   ```
-   conda deactivate
-   ```
-   And then delete the module folder and re-run 
-   ```
-   npm install
-   ```
-   If problem persists, try to check Python virtual environment (or reinstall python) to make sure the python environment is desired and then delete module folder and re-run
-   ```
-   npm install
-   ```
-   
-
-## About data
-
-1. The raw data collected from the website are .txt files, containing info about grades, order of videos, watching and decision time of each grade, and the content of the survey. I will up load them to `./raw_data/`, you can load these data into npy files with `process_data.py`, which has already been done and the npy files are in `./data` folder, so you may not need to deal with raw data. I have rejected unqualified results on MTurk, so all the results in the npy file are valid.
-
-2. In the `./data` folder, you can see all the npy files and plotting codes. Sorry for the confusing names of the npy files:
-    - amazon: 001, 002, 003, 004
-    - cnn: cnn, cnn_new
-    - google: google, google_new
-    - youtube: youtube, youtube_new
-3. To plot a single curve for a website, eg. amazon, just run `plot_amazon.py`. To plot all the curves combined in one picture, run `plot_combine.py`. `plot_diff.py` plots the differential of the curves on every 2 points(you can modify to every 1 point). All the plotted results are in the `./figs` folder.

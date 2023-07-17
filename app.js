@@ -5,6 +5,8 @@ const bodyParser = require('koa-bodyparser');
 
 const controller = require('./controller');
 
+const templating = require('./templating');
+
 const fs = require('fs');
 
 const rimraf = require("rimraf");
@@ -18,15 +20,10 @@ var prompt = require('prompt-sync')();
 var dummy = true;
 
 
-//Initialize results
-
-
 // log request URL:
 app.use(async (ctx, next) => {
     console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
     var
-const templating = require('./templating');
-
         start = new Date().getTime(),
         execTime;
     await next();
@@ -34,11 +31,13 @@ const templating = require('./templating');
     ctx.response.set('X-Response-Time', `${execTime}ms`);
 });
 
+
 // parse user from cookie:
 app.use(async (ctx, next) => {
     ctx.state.user = parseUser(ctx.cookies.get('name') || '');
     await next();
 });
+
 
 // static file support:
 if (! isProduction) {
@@ -48,6 +47,7 @@ if (! isProduction) {
 
 // parse request body:
 app.use(bodyParser());
+
 
 // add nunjucks as view:
 app.use(templating('views', {

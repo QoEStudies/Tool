@@ -1,4 +1,4 @@
-def process_user_feedback(user_feedback = None):
+def add_worker(user_feedback = None):
     if user_feedback is not None:
         # do something ...
         remove_this_if_you_have_your_logic = 1

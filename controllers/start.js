@@ -1,31 +1,19 @@
 // start test:
-var get_initial_videos = require('../models/get_initial_videos')
-var process_user_feedback = require('../models/process_user_feedback')
-
+var submit_rating = require('../models/submit_rating')
 var get_next_video = require('../models/get_next_video')
+var add_worker = require('../models/add_worker')
+
 
 var fs = require('fs');
 
 // change it when you use a different website URL
 const server_path = "http://localhost:3001/static/videos/"
-
-const video_folder = "test_videos";
-const video_path = "./static/videos/" + video_folder;
-const video_url = server_path + video_folder + "/";
+const video_url = server_path + "/test_videos/";
 
 // default setting: best, worst video names are best & worst
-var best_quality = "1";
-var worst_quality = "2";
+var best_quality = "best.mp4";
+var worst_quality = "worst.mp4";
 
-// you have to pre-determine the # of videos.
-var num_vids;
-
-fs.readdir(video_path, function (err, files) {
-    // examine # of videos
-    let file_numbers;
-    file_numbers = files.length;
-    console.log("Initially, we have " + file_numbers + " videos.");
-});
 
 var post_example = async (ctx, next) => {
     ctx.render('example.html', {});
@@ -37,17 +25,13 @@ var post_start = async (ctx, next) => {
     var age = ctx.request.body.age;
     var network = ctx.request.body.network;
 
-    var initial_order = await get_initial_videos();
-
-    var video_order = [best_quality, worst_quality, ...initial_order];
-    num_vids = video_order.length;
+    var video_order = [best_quality];
 
     console.log("User info: ", mturkID, device, age);
     console.log("videos", video_order)
 
     var start = new Date().getTime();
     var results = fs.readdirSync('./results/')
-
     if (results.indexOf(mturkID + '.txt') > -1) {
         flag = false;
         ctx.render('repeat.html', {});
@@ -68,10 +52,12 @@ var post_start = async (ctx, next) => {
         start: start
     };
 
-    for (i = 0; i < num_vids; i++) {
+    for (i = 0; i < 300; i++) {
         user.video_time.push(0);
         user.grade_time.push(0);
     }
+
+    var worker_added = add_worker(user.mturkID)
 
     let value = Buffer.from(JSON.stringify(user)).toString('base64');
     ctx.cookies.set('name', value);
@@ -88,20 +74,15 @@ var post_grade = async (ctx, next) => {
     let value = Buffer.from(JSON.stringify(user)).toString('base64');
     ctx.cookies.set('name', value);
 
-    var title = user.count + "/" + num_vids;
-
     ctx.render('grade.html', {
-        title: title, count: user.count, num_vids: num_vids
+       count: user.count
     });
 }
 
 var post_first = async (ctx, next) => {
-    var video_src = video_url + best_quality + ".mp4";
-    // https://github.com/michaelliao/learn-javascript/raw/master/video/vscode-nodejs.mp4
-
-    var title = "1/" + num_vids;
+    var video_src = video_url + best_quality;
     ctx.render('video.html', {
-        title: title, video_src: video_src
+        video_src: video_src
     });
 }
 
@@ -111,33 +92,36 @@ var post_training = async (ctx, next) => {
 }
 
 var post_reference = async (ctx, next) => {
-
     ctx.render('reference.html', {
-        best_quality: video_url + best_quality + ".mp4", worst_quality: video_url + worst_quality + ".mp4"
+        best_quality: video_url + best_quality, worst_quality: video_url + worst_quality
     });
 }
 
 var post_back2video = async (ctx, next) => {
     var user = ctx.state.user;
-    var video_src = video_url + user.video_order[user.count - 1] + ".mp4";
+    var video_src = video_url + user.video_order[user.count - 1];
+
+    console.log('post_back2video*****************************');
+    console.log(user.video_order)
+    console.log(video_src);
+
     var end = new Date().getTime();
     var exe_time = end - user.start;
     user.grade_time[user.count - 1] += exe_time;
     user.start = end;
     let value = Buffer.from(JSON.stringify(user)).toString('base64');
     ctx.cookies.set('name', value);
-    var title = user.count + "/" + num_vids;
     if (user.video_order[user.count - 1] == 1) {
         ctx.render('video.html', {
-            title: title, video_src: video_src
+            video_src: video_src
         });
     } else if (user.video_order[user.count - 1] == 2) {
         ctx.render('bad_video.html', {
-            title: title, video_src: video_src
+           video_src: video_src
         });
     } else {
         ctx.render('2video.html', {
-            title: title, video_src: video_src
+            video_src: video_src
         });
     }
 }
@@ -155,36 +139,46 @@ var post_next = async (ctx, next) => {
     user.result.push(grade);
 
     user.grade_time[user.count - 1] += exe_time;
-
     user.start = end;
 
-    if (user.count < num_vids) {
-        var user_feedback = grade + '\n' + '\n' + exe_time;
-        var video_file_name = await get_next_video(user_feedback);
-        if (video_file_name != "-1") {
-            console.log("next video is not -1" + video_file_name);
-            user.video_order.splice(user.count, 1, video_file_name);
-        }
+    if (user.count >= 3) {
+        submit_rating(user.mturkID, user.grade_time[user.count - 1], user.video_order.slice(-1)[0], grade);
+    }
 
-        var video_src = video_url + user.video_order[user.count] + ".mp4";
+    var video_file_name = "None";
+    if (user.count == 1) {
+        video_file_name = worst_quality;
+    }
+    else {
+        video_file_name = get_next_video(user.mturkID)
+    }
+
+
+    if (video_file_name != "None") {
+
+        console.log("next video is not None" + video_file_name);
+        user.video_order.push(video_file_name);
+        console.log(user.video_order);
+        console.log("xxxxxxxxxxxxxxxxxxxxxxxxxx")
+
+        var video_src = video_url + video_file_name;
 
         user.count = user.count + 1;
-        var title = user.count + "/" + num_vids;
 
         // set new cookie
         let value = Buffer.from(JSON.stringify(user)).toString('base64');
         ctx.cookies.set('name', value);
         if (user.count == 2) {
             ctx.render('bad_video.html', {
-                title: title, video_src: video_src
+                video_src: video_src
             });
         } else if (user.count == 3) {
             ctx.render('test_page.html', {
-                title: title, video_src: video_src
+                video_src: video_src
             });
         } else {
             ctx.render('2video.html', {
-                title: title, video_src: video_src
+                video_src: video_src
             });
         }
     } else {
@@ -231,15 +225,10 @@ var post_end = async (ctx, next) => {
         }
     });
 
-    var user_feedback_processing_results = await process_user_feedback(user_feedback);
-    console.log("information processed: ", user_feedback_processing_results)
-
     // clear cookie
     ctx.cookies.set('name', '');
-
-    var return_code = video_folder;
     ctx.render('ending.html', {
-        title: 'Thank you', return_code: return_code
+        title: 'Thank you', return_code: "QoEStudies"
     });
 }
 
