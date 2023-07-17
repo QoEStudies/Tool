@@ -63,7 +63,7 @@ this tool can dynamically generate videos to rate during the user study task.
 
    After finishing the test, the results will be stored in `./results/`, the file name will be the MTurk ID.
 
-## Customize your user study
+## Dynamically determine video quality
 
 ### Customize your video quality
 
@@ -149,4 +149,10 @@ It means how many **MORE** ratings we need for the videos. For example, if the o
    Remember to change the link correspondingly if you changed the port number.
 
 5. Finish and publish a batch.
+
+## Analyze your results
+
+The results `video_history.pkl` and  `worker_history.pkl` are stored in `results` folder.
+The `*.pkl` files are in JSON format with descriptions.
+
 
