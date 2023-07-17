@@ -52,7 +52,7 @@ this tool can dynamically generate videos to rate during the user study task.
    ```shell
    node app.js & python ./py/app.py
    ```
-
+   or if you do not want to print the logs to `stdout`.
    ```shell
    node app.js & python ./py/app.py 1>/dev/null 2>&1 &
    ```
