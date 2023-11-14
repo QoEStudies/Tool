@@ -156,3 +156,10 @@ The results `video_history.pkl` and  `worker_history.pkl` are stored in `results
 The `*.pkl` files are in JSON format with descriptions.
 
 
+## Publications
+
+Part of the results of this tools is published [here](https://arxiv.org/abs/2311.06698).
+
+```shell
+[1] VidPlat: A Tool for Fast Crowdsourcing of Quality-of-Experience Measurements. Xu Zhang, Hanchen Li, Paul Schmitt, Marshini Chetty, Nick Feamster, Junchen Jiang. https://arxiv.org/abs/2311.06698
+```
